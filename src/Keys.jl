@@ -4,7 +4,7 @@ using Random
 export primarykey, secondarykey, charset
 
 # Generates a standard distance key for the plaintext message
-function primarykey(msg::String, condense::Bool)
+function primarykey(msg::String, condense::Bool)::Vector{Char}
     if condense == false
         valid_chars = collect("ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789")
     else
@@ -16,7 +16,7 @@ function primarykey(msg::String, condense::Bool)
 end
 
 # Shuffles the provided charset to create a random marker + salt order
-function secondarykey(charset)
+function secondarykey(charset)::Vector{Char}
     charset = collect(charset)
     secondary_key = shuffle!(charset)
     return secondary_key

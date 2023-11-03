@@ -4,48 +4,43 @@ export nazcahelp, encrypthelp, decrypthelp
 
 function nazcahelp()
     println("""
-Nazca 2023 0.0.1
-Run 'julia Nazca.jl encrypt' or 'decrypt' to view usage.
+Nazca 2023 0.0.1 by J. Stach.
+Run 'julia Nazca.jl encrypt' or 'decrypt' to view command usage.
     """)
 end
 
 function encrypthelp()
     println("""
-Usage: julia Nazca.jl encrypt [-c] [-v|-q] [key1=Path/to/Key1] [key2=Path/To/Key2] [PLAINTEXT|Path/To/Text.txt] [--save Path/To/SaveDirectory]
+Usage:
+    julia Nazca.jl encrypt [-c] [-v|q] \
+    [--key Path/To/Keys.yaml] "PLAIN TEXT" [--save Path/To/Save.yaml]
 
-Options:
+"PLAIN TEXT" is the message to encrypt and can be a string of
+any characters a-Z, 0-9, or space.
+
+Options & flags:
     --condense, -c
-        Minimizes matrix size by generating a key from the set of
-        characters that are used in the plaintext message.
+        Minimizes matrix size by generating a key using only
+        the set of characters present in the plaintext message.
     --verbose, -v
-        Prints all log info to the standard output.
+        Prints all logs to the standard output.
+        (Default behavior is to only print "Info" logs and above.)
     --quiet, -q
-        Prints nothing to the standard output.
+        Turns off non-"Error" logging to the standard output.
 
-    --save Path/To/SaveDirectory
-        Use this option to specify a directory to hold generated
-        key and ciphertext files.
-        (Default is current working directory.)
+    --key Path/To/Keys.yaml
+        Specify the filepath of the encryption keys to use.
+        (Default is to generate new random keys and save them separately.)
+
+    --save Path/To/Save.yaml
+        Set the save filepath for the generated ciphertext;
+        keys will be generated in the same directory.
+        (Default is to use arbitrary names and the current directory.)
     """)
 end
 
 function decrypthelp()
     println("""
-Usage: julia Nazca.jl decrypt [-v|-q] [-i] key1=[Path/to/Key1] key2=[Path/to/Key2] [Path/To/CipherText.txt] [--save Path/To/SaveDirectory]
-
-Options:
-    --verbose, -v
-        Prints all log info to the standard output.
-    --quiet, -q
-        Prints nothing to the standard output.
-    --incognito, -i
-        Prints decrypted plaintext to the standard output
-        but does not save to a file.
-
-    --save Path/To/SaveDirectory
-        Use this option to specify a directory to hold decrypted
-        plaintext files.
-        (Default is current working directory.)
     """)
 end
 

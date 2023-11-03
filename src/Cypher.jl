@@ -4,8 +4,9 @@ using Random
 export primary_encryption, goodspots, placement, salt
 
 # Converts the message into a vector of placement distances (encrypted message)
-function primary_encryption(msg::String, key1::Array{Char})
+function primary_encryption(msg::String, key1::String)
     emsg = []
+    key1 = collect(key1)
     for char in msg
         echar = findfirst(c -> c == char, key1)
         push!(emsg, echar)
@@ -28,7 +29,8 @@ function goodspots(mtx, x, y, dist)
     return good_spots
 end
 
-#TODO describe me DEBUG ME
+#TODO describe me DEBUG ME & add logging
+# TODO last placement is not showing up on final matrix
 function placement(mtx, x, y, emsg, key2, depth)::Bool
     if depth > length(emsg)
         return true # if the message is placed, end recursion
