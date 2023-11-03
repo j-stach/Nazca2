@@ -10,6 +10,10 @@ log_config = ConsoleLogger(stderr, LogLevel(Info))
 global_logger(log_config)
 
 #-- Handle command line arguments
+using Pkg
+Pkg.add("YAML")
+using YAML
+
 include("./Keys.jl")
 include("./Help.jl")
 include("./File.jl")
@@ -18,7 +22,7 @@ using .Keys, .Help, .File
 command = ARGS[1]
 subargs = ARGS[2:end]
 
-# Empty option argument variables
+# Default global variables
 global savepath = ""
 
 global keypath = ""
@@ -29,13 +33,12 @@ global keypath = ""
 global condense = false
 global verbose = false
 global quiet = false
-global silent = false
 
+# Parse top level commands
 include("./Encrypt.jl")
 include("./Decrypt.jl")
 using .Encrypt, .Decrypt
-
-if command == "encrypt"
+if command == "encrypt"                     # ENCRYPT command
     # Parse arguments
     for (i, sarg) in enumerate(subargs)
         if sarg == "--quiet" || sarg == "-q"
@@ -71,7 +74,7 @@ if command == "encrypt"
     end
 
     # Check remaining arguments
-    subargs = [item for item in subargs if first(item) != '-']
+    subargs = [item for item in subargs if first(item) != '-'] # TODO debug
     @debug("Subargs remaining: $subargs")
     if length(subargs) != 1
         @error("Requires exactly one plaintext message argument.")
@@ -79,7 +82,7 @@ if command == "encrypt"
     else
         msg = subargs[1]
         newkey = false
-        # TODO change file module to specific load/saves
+
         # Load keyfile, extract key1 and key2
         if !isempty(keypath)
             try open(keypath, "r") do io
@@ -96,24 +99,46 @@ if command == "encrypt"
         if isempty(key1) || isempty(key2)
             newkey = true
         end
+
+        # Encrypt the message to product ciphertext
         ciphertext = encrypt(msg, condense)
-        # TODO save matrix to location, and save keyfile if newkey
+
+        # Save the ciphertext to a new file
         if !isempty(savepath)
             try open(savepath, "w") do io
                 YAML.dump(io, ciphertext) # TODO Better way to save that is readable?
+                @info("Ciphertext saved to $savepath")
                 end
             catch
-                @warn("Failed to save at specified location... Check your permission.")
+                @error("Failed to save at specified location. Check your permissions.")
             end
         else
             global savepath = newfile()
-            #save(savepath, ciphertext)
+            save(savepath, ciphertext)
+            @info("Ciphertext saved to $savepath")
         end
-        # TODO save keys to same path with altered filename
 
+        # If new keys were generated, save them alongside the ciphertext
+        if newkey == true
+            savepathregex = r"(.*/)?([^/]+)\.yaml$"      # Kate IDE hl breaks on "$" in regex.
+            regexmatch = match(savepathregex, savepath)
+            if regexmatch !== nothing
+                savedir = regexmatch.captures[1]
+                keysave = regexmatch.captures[2] * "_keys.yaml"
+                keys = Dict("key1" => key1, "key2" => key2)
+                save(keysave, keys) # TODO Better way to save that is readable?
+                @info("Keys saved to $keysave")
+            else
+                @error("Failed to parse save path. New keyfile was not saved.")
+            end
+        end
     end
 
-    # TODO DECRYPT
+# TODO DECRYPT
+# read keyfile & extract keys, read save file
+# decryption algorithm
+
+# TODO DISPLAY
 end # command argument parsing
 
 end # module Nazca
