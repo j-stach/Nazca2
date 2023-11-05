@@ -33,6 +33,4 @@ end
 
 # TODO create unicode range from starting point and length
 
-# TODO save keys to file, read keys from file
-
 end # module Keys

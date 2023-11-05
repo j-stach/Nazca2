@@ -11,10 +11,6 @@ log_config = ConsoleLogger(stderr, LogLevel(Info))
 global_logger(log_config)
 
 #-- Handle command line arguments
-using Pkg
-Pkg.add("YAML")
-using YAML
-
 include("./Keys.jl")
 include("./Help.jl")
 include("./File.jl")
@@ -58,7 +54,7 @@ if command == "encrypt"                     # ENCRYPT command
                 @debug("'keypath' set to $keypath")
                 deleteat!(subargs, i + 1)
                 else
-                    @warn("Incorrect file format detected: Nazca uses .yaml")
+                    @warn("Incorrect file format detected: Nazca uses YAML (.yaml or .yml)")
                 end
             end
         elseif sarg == "--save"
@@ -68,7 +64,7 @@ if command == "encrypt"                     # ENCRYPT command
                 @debug("'savepath' set to $savepath")
                 deleteat!(subargs, i + 1)
                 else
-                    @warn("Incorrect file format detected: Nazca uses .yaml")
+                    @warn("Incorrect file format detected: Nazca uses YAML (.yaml or .yml)")
                 end
             end
         end
@@ -85,11 +81,9 @@ if command == "encrypt"                     # ENCRYPT command
         newkey = false
 
         # Load keyfile, extract key1 and key2
-        if !isempty(keypath)
-            # TODO
-            loadkeys(keypath)
+        if !isempty(keypath) loadkeys(keypath)
         else
-            @debug("No keypath provided... Generating new key.")
+            @debug("No keyfile provided... Generating new key.")
         end
         if isempty(key1) || isempty(key2)
             newkey = true
@@ -124,8 +118,59 @@ if command == "encrypt"                     # ENCRYPT command
     end
 
 # TODO DECRYPT
-# read keyfile & extract keys, read save file
-# decryption algorithm
+elseif command == "decrypt"                     # DECRYPT command
+    # Parse arguments
+    for (i, sarg) in enumerate(subargs)
+        if sarg == "--quiet" || sarg == "-q"
+            global quiet = true
+            @debug("'quiet' set to true")
+        elseif sarg == "--verbose" || sarg == "-v"
+            global verbose = true
+            @debug("'verbose' set to true")
+        elseif sarg == "--key"
+            if length(subargs) >= i + 1
+                if okpath(subargs[i + 1])
+                global keypath = subargs[i + 1]
+                @debug("'keypath' set to $keypath")
+                deleteat!(subargs, i + 1)
+                else
+                    @warn("Incorrect file format detected: Nazca uses YAML (.yaml or .yml)")
+                end
+            end
+        end
+    end
+
+    # Check remaining arguments
+    subargs = [item for item in subargs if first(item) != '-'] # TODO debug
+    @debug("Subargs remaining: $subargs")
+    if length(subargs) != 1
+        @error("Requires exactly one cyphertext path argument.")
+        decrypthelp()
+    else
+        ct = subargs[1]
+        cyphertext = loadcyphertext(ct)
+
+        # Load keyfile, extract key1 and key2
+        if !isempty(keypath) loadkeys(keypath)
+        else
+            @error("No keyfile provided... Unable to decrypt.")
+        end
+
+        # Decrypt the cyphertext to product plaintext
+        plaintext = decrypt(cyphertext)
+
+        # Save the decrypted message
+        ctpathregex = r"(.*/)?([^/]+)\.yaml$"      # Kate IDE hl breaks on "$" in regex.
+        regexmatch = match(ctpathregex, ct)
+        if regexmatch !== nothing
+            savedir = regexmatch.captures[1]
+            decryptsave = regexmatch.captures[2] * "_decrypted.yaml"
+            saveplaintext(decryptsave, plaintext)
+            @info("Message saved to $decryptsave")
+        else
+            @error("Failed to parse file path. Message was not saved.")
+        end
+    end
 
 # TODO DISPLAY
 end # command argument parsing

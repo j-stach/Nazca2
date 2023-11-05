@@ -2,7 +2,9 @@
 module File
 using Dates, Base.Filesystem
 import ..Nazca
-export newfile, okpath, savekeys, savecyphertext, loadkeys, loadcyphertext
+export newfile, okpath, savekeys, savecyphertext, loadkeys, loadcyphertext, saveplaintext
+include("./Matrix.jl")
+using .Matrix
 
 # Automatically names a new file based on current time
 function newfile()
@@ -57,7 +59,7 @@ function savecyphertext(path, mtx)
     rows, cols = size(mtx)
     for r in 1:rows
         rowstr = join(mtx[r, :])
-        write(file, "block$r: $rowstr\n")
+        write(file, "$r: $rowstr\n")
     end
     write(file, "---\n")
     close(file)
@@ -65,8 +67,38 @@ end
 
 # TODO Retrieve saved cyphertext from YAML file
 function loadcyphertext(path)
-    if okpath(path)
+    file = open(path, "r")
+    blocks = []
+    for line in eachline(file)
+        rowmatch = match(r"\d+: ([^\n]+)$", line)
+        if rowmatch !== nothing
+            row = string(rowmatch.captures[1])
+            push!(blocks, row)
+        end
     end
+    close(file)
+
+    x, y = size(blocks)[1], length(blocks[1])
+    mtx = fill('_', x, y)
+    for i in 1:x
+        vecblock = collect(blocks[i])
+        for j in 1:y
+            mtx[i, j] = vecblock[j]
+        end
+    end
+
+    #printmtx(mtx)
+    return mtx
+end
+
+function saveplaintext(path, msg)
+    file = open(path, "w")
+    write(file, """
+---
+message: "$msg"
+---
+""")
+    close(file)
 end
 
 
