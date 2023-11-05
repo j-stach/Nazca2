@@ -1,5 +1,6 @@
 # TODO
 # remove types to support image formats (add generics)
+# config file or args?
 
 module Nazca
 export key1, key2
@@ -85,14 +86,8 @@ if command == "encrypt"                     # ENCRYPT command
 
         # Load keyfile, extract key1 and key2
         if !isempty(keypath)
-            try open(keypath, "r") do io
-                keys = YAML.load(io)
-                if !isempty(keys["key1"]) global key1 = collect(keys["key1"]) end
-                if !isempty(keys["key2"]) global key2 = collect(keys["key2"]) end
-                end
-            catch
-                @warn("'$keypath' could not be read... Generating new key.")
-            end
+            # TODO
+            loadkeys(keypath)
         else
             @debug("No keypath provided... Generating new key.")
         end
@@ -101,20 +96,15 @@ if command == "encrypt"                     # ENCRYPT command
         end
 
         # Encrypt the message to product ciphertext
-        ciphertext = encrypt(msg, condense)
+        cyphertext = encrypt(msg, condense)
 
-        # Save the ciphertext to a new file
+        # Save the cyphertext to a new file
         if !isempty(savepath)
-            try open(savepath, "w") do io
-                YAML.dump(io, ciphertext) # TODO Better way to save that is readable?
-                @info("Ciphertext saved to $savepath")
-                end
-            catch
-                @error("Failed to save at specified location. Check your permissions.")
-            end
+            savecyphertext(savepath, cyphertext)
+            @info("Ciphertext saved to $savepath")
         else
             global savepath = newfile()
-            save(savepath, ciphertext)
+            savecyphertext(savepath, cyphertext)
             @info("Ciphertext saved to $savepath")
         end
 
@@ -125,8 +115,7 @@ if command == "encrypt"                     # ENCRYPT command
             if regexmatch !== nothing
                 savedir = regexmatch.captures[1]
                 keysave = regexmatch.captures[2] * "_keys.yaml"
-                keys = Dict("key1" => key1, "key2" => key2)
-                save(keysave, keys) # TODO Better way to save that is readable?
+                savekeys(keysave)
                 @info("Keys saved to $keysave")
             else
                 @error("Failed to parse save path. New keyfile was not saved.")
