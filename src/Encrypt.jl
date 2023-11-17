@@ -1,4 +1,7 @@
 
+# TODO Needs to autosize encryption matrix, or retry with a new origin
+# when the message doesn't fit -- needs to be able to handle actual messages
+
 module Encrypt
 using Random, Logging
 import ..Nazca

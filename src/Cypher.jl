@@ -32,8 +32,11 @@ end
 #TODO describe me DEBUG ME & add logging
 # TODO last placement is not showing up on final matrix
 function placement(mtx, x, y, emsg, key2, depth)::Bool
-    if depth > length(emsg)
+    if depth > length(emsg) + 1
         return true # if the message is placed, end recursion
+        # TODO Needs to place a message end character?
+        # Or else establish a convention of double space to end message decryption
+        # TODO Needs overflow errors handled
     end
     good_spots = goodspots(mtx, x, y, emsg[depth - 1])
     for (i, j) in good_spots # for each available spot
